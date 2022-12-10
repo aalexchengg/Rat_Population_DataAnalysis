@@ -1,7 +1,7 @@
 ---
-title:  36-315 Final Project Data Pre-analysis 
-author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren 
-date:  November 18, 2022 
+title:  36-315 Final Project Data Pre-analysis
+author:  Arthur Jakobsson, Alex Cheng, Liz Chu, Kevin Ren
+date:  November 18, 2022
 output:
   html_document:
     toc: yes
@@ -17,7 +17,7 @@ urlcolor: blue
 #Loading in our Libraries
 Before we can do anything, we're going to load in all the libaries that we will use for the rest of the notebook. In the case that you find a new library you have to install, please do it in this large cell here rather than in assorted cells below.
 
-```{r} 
+```{r}
 # library imports
 
 library(tigris)
@@ -36,6 +36,7 @@ library(ggseas)
 library(geosphere)
 library(stringr)
 library(hydroTSM)
+library(vcd)
 # distm(c(lon1, lat1), c(lon2, lat2), fun = distHaversine)
 ```
 
@@ -49,30 +50,27 @@ rats <- read.csv(file = 'Raw/Rat_Sightings.csv')
 health_inspection <- read.csv(file = 'Raw/DOHMH_New_York_City_Restaurant_Inspection_Results.csv')
 # # https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/rs6k-p7g6
 drinking_water_inspection <- read.csv(file = 'Raw/Self-Reported_Drinking_Water_Tank_Inspection_Results.csv')
-# # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data 
+# # https://data.cityofnewyork.us/Health/Self-Reported-Drinking-Water-Tank-Inspection-Resul/gjm4-k24g/data
 
-knicks <- read.csv(file = 'Raw/knicks.csv')
-# @ALEX
-
-tax2019 <- read.csv(file = 'Raw/nyc2019taxreturns.csv')
-# @ALEX
-
-pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
-# @ALEX
-
-barLoc <- read.csv(file = 'Raw/nycbarlocations.csv')
-# @ALEX
-
-dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
-# @ALEX
-
-filmLoc <- read.csv(file = 'Raw/nycfilmlocations.csv')
-# @ALEX
-
-zipcodenames <- read.csv(file = 'Raw/zipcodenames.csv')
-
-
-
+# knicks <- read.csv(file = 'Raw/knicks.csv')
+# # @ALEX
+#
+# tax2019 <- read.csv(file = 'Raw/nyc2019taxreturns.csv')
+# # @ALEX
+#
+# pop2022 <- read.csv(file = 'Raw/nyc2022population.csv')
+# # @ALEX
+#
+# barLoc <- read.csv(file = 'Raw/nycbarlocations.csv')
+# # @ALEX
+#
+# dailyCovid <- read.csv(file = 'Raw/nycdailycovid.csv')
+# # @ALEX
+#
+# filmLoc <- read.csv(file = 'Raw/nycfilmlocations.csv')
+# # @ALEX
+#
+# zipcodenames <- read.csv(file = 'Raw/zipcodenames.csv')
 
 subway_entrances <- read.csv(file = 'Raw/SubwayEntrances.csv')
 subway_entrances <- subway_entrances %>% add_column(longitude = NA)
@@ -86,13 +84,13 @@ for (i in (1:nrow(subway_entrances))) {
 subway_entrances$longitude = longs
 subway_entrances$latitude = lats
 
-# 
+#
 # #NYC map lines
 r <- GET('http://data.beta.nyc//dataset/0ff93d2d-90ba-457c-9f7e-39e47bf2ac5f/resource/35dd04fb-81b3-479b-a074-a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson')
 nyc_neighborhoods <- readOGR(content(r,'text'), 'OGRGeoJSON', verbose = F)
 # # https://rpubs.com/jhofman/nycmaps
-# 
-# 
+#
+#
 # # clean up rat dataset (remove empty/useless columns)
 # rats = subset(rats, select = -c(Agency, Agency.Name,Complaint.Type,  Descriptor ,  Vehicle.Type ,  Taxi.Company.Borough ,  Taxi.Pick.Up.Location , Bridge.Highway.Name ,  Bridge.Highway.Direction ,  Road.Ramp ,  Bridge.Highway.Segment, Facility.Type, Park.Facility.Name) )
 # # clean up health inspection dataset (remove empty/useless columns)
@@ -107,8 +105,8 @@ write.csv(rats, "Raw/rats_condensed.csv")
 # maps setup
 
 #nice map (manhattan, brooklyn, queens, a bit of bronx)
-left =-74.03 
-bottom = 40.68 
+left =-74.03
+bottom = 40.68
 right = -73.87
 top = 40.85
 nyc_coords <- c(left, bottom, right, top)
@@ -140,7 +138,7 @@ nyc_mapPolygon <- ggmap(nyc_map) +
 nyc_mapFPolygon <- ggmap(nyc_mapF) +
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
 
-nyc_mapMPolygon <- ggmap(nyc_mapM) + 
+nyc_mapMPolygon <- ggmap(nyc_mapM) +
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA)
 
 # nyc_mapPolygon
@@ -188,8 +186,8 @@ ratHealthScore_mapF <- ggmap(nyc_mapF) +
 
 ratHealthScore_mapM <- ggmap(nyc_mapM) +
   geom_point(data=ratSubsetM, aes(x=Longitude, y = Latitude), alpha=0.2, size =0.1, color = "chocolate3") +
-  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) + 
-  scale_color_distiller(palette = "PiYG") + 
+  geom_point(data=healthSubsetM, aes(x=Longitude, y = Latitude, color = SCORE), size = 0.5, alpha=0.2) +
+  scale_color_distiller(palette = "PiYG") +
   geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill="white", alpha=0.3)
 
 ```
@@ -200,8 +198,8 @@ ratHealthScore_mapM <- ggmap(nyc_mapM) +
 
 ratSubway_mapF <- ggmap(nyc_mapF) +
   geom_point(data=ratSubsetF, aes(x=Longitude, y = Latitude), alpha=0.05, size =0.1, color = "chocolate3") +
-  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 1, alpha=0.5) + 
-  scale_color_distiller(palette = "PiYG") # + 
+  geom_point(data=subway_entrances, aes(x=longitude, y = latitude), color="red",  size = 1, alpha=0.5) +
+  scale_color_distiller(palette = "PiYG") # +
   # geom_polygon(data=nyc_neighborhoods_df, aes(x=long, y=lat, group=group), color="blue", fill=NA, alpha=0.3)
 
 # ratHealthScore_map
@@ -227,12 +225,12 @@ ratSubway_mapF
 #   }
 #   return(min)
 # }
-# 
+#
 # ratSubsetM <- ratSubsetM %>% drop_na(Longitude)
 # ratSubsetM <- ratSubsetM %>% drop_na(Latitude)
 # # ratsub = rats[1:100,]
 # ratSubsetM <- ratSubsetM %>% add_column(minSubwayDistance = NA)
-# 
+#
 # mindists = 1:nrow(ratSubsetM)
 # for(i in (1:nrow(ratSubsetM)))
 # {
@@ -249,24 +247,35 @@ ratSubway_mapF
 ```
 
 #Exploratory Data Analysis
-I literally have no idea what is happening in the stuff above this cell so I will choose to ignore it. This section will be focused on exploring the dataset that we currently have without pulling in external data - what would the distribution of the rats 
+I literally have no idea what is happening in the stuff above this cell so I will choose to ignore it. This section will be focused on exploring the dataset that we currently have without pulling in external data - what would the distribution of the rats
 ```{r}
-# Alex's Rats Visualization
+# Family/Non-family Rats Visualization: subsetting
 rats = subset(rats, rats$Borough != "Unspecified")
 rats_fam = subset(rats, grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_fam = subset(rats_fam, (Borough == "BRONX" | Borough == "BROOKLYN" | Borough == "MANHATTAN" | Borough == "QUEENS" | Borough == "STATEN ISLAND"))
 rats_fam$simple = ifelse(grepl("1-2", rats_fam$Location.Type, fixed = TRUE), "1-2 Family", "3+ Families")
+
 rats_other = subset(rats, !grepl("Family", rats$Location.Type, fixed = TRUE))
+rats_other = subset(rats_other, Location.Type != "Other (Explain Below)")
+rats_other = subset(rats_other, Location.Type != "Street Area")
+rats_other = subset(rats_other, (Borough == "BRONX" | Borough == "BROOKLYN" | Borough == "MANHATTAN" | Borough == "QUEENS" | Borough == "STATEN ISLAND"))
 rats_other = rats_other %>% group_by(Location.Type) %>% filter(n() > 300 )
-family = ggplot(data = rats_fam, aes(x = Borough)) + 
-geom_bar(aes(fill = simple)) + 
+rats_other["Location.Type"][rats_other["Location.Type"] == "Vacant Building" | rats_other["Location.Type"] == "Vacant Lot"] <- "Unoccupied"
+rats_other["Location.Type"][rats_other["Location.Type"] == "Government Building" | rats_other["Location.Type"] == "Commercial Building"] <- "Office Building"
+```
+
+```{r}
+# fam/non-fam visualization
+family = ggplot(data = rats_fam, aes(x = Borough)) +
+geom_bar(aes(fill = simple)) +
 labs(
 title = "Rat Sightings Count for Family Dwellings",
 x = "Borough",
 y = "Count",
 fill = "Number of Families"
 )
-non_family = ggplot(data = rats_other, aes(x = Borough)) + 
-geom_bar(aes(fill = Location.Type)) + 
+non_family = ggplot(data = rats_other, aes(x = Borough)) +
+geom_bar(aes(fill = Location.Type)) +
 labs(
 title = "Rat Sightings Count for Non-Family Dwellings",
 subtitle = "Must have at least 300 sightings per location type",
@@ -276,6 +285,12 @@ fill = "Location Type"
 )
 grid.arrange(family, non_family, nrow = 2)
 ```
+```{r}
+par(mar = c(5,4,1,10))
+
+mosaicplot(table(rats_other$Borough, rats_other$Location.Type), main = "Mosaic Plot of Non-Family Location Types by Borough", shade=TRUE, las=2)
+```
+
 
 ```{r}
 
@@ -283,10 +298,10 @@ grid.arrange(family, non_family, nrow = 2)
 # rats is the unedited version of the dataset !!
 # rats = read.csv(file = "Rat_Data.csv")
 # rats = subset(rats, select = -c(Agency, Agency.Name, Complaint.Type, Descriptor,
-#                                 Vehicle.Type, Taxi.Company.Borough, 
-#                                 Taxi.Pick.Up.Location , Bridge.Highway.Name, 
-#                                 Bridge.Highway.Direction, Road.Ramp, 
-#                                 Bridge.Highway.Segment, Facility.Type, 
+#                                 Vehicle.Type, Taxi.Company.Borough,
+#                                 Taxi.Pick.Up.Location , Bridge.Highway.Name,
+#                                 Bridge.Highway.Direction, Road.Ramp,
+#                                 Bridge.Highway.Segment, Facility.Type,
 #                                 Park.Facility.Name))
 
 
@@ -295,16 +310,16 @@ library(magrittr)
 library(knitr)
 private = c(
   "1-2 Family Dwelling",
-  "1-2 Family Mixed Use Building", 
-  "1-2 FamilyDwelling", 
-  "1-3 Family Dwelling", 
-  "1-3 Family Mixed Use Building", 
-  "3+ Family Apartment Building", 
-  "3+ Family Apt", 
-  "3+ Family Apt.", 
-  "3+ Family Apt. Building", 
+  "1-2 Family Mixed Use Building",
+  "1-2 FamilyDwelling",
+  "1-3 Family Dwelling",
+  "1-3 Family Mixed Use Building",
+  "3+ Family Apartment Building",
+  "3+ Family Apt",
+  "3+ Family Apt.",
+  "3+ Family Apt. Building",
   "3+ Family Mixed Use Building",
-  "3+Family Apt.", 
+  "3+Family Apt.",
   "Apartment",
   "Private House",
   "Residence",
@@ -315,37 +330,37 @@ private = c(
 
 commercial = c(
   "Cafeteria - Public School",
-  "Catering Service", 
-  "Commercial Building", 
-  "Commercial Property", 
-  "Construction Site", 
-  "Day Care/Nursery", 
-  "Government Building", 
+  "Catering Service",
+  "Commercial Building",
+  "Commercial Property",
+  "Construction Site",
+  "Day Care/Nursery",
+  "Government Building",
   "Grocery Store",
   "Hospital",
-  "Office Building", 
-  "Restaurant", 
-  "Restaurant/Bar/Deli/Bakery", 
-  "Retail Store", 
-  "School", 
+  "Office Building",
+  "Restaurant",
+  "Restaurant/Bar/Deli/Bakery",
+  "Retail Store",
+  "School",
   "School/Pre-School",
   "Store",
-  "Street Fair Vendor", 
+  "Street Fair Vendor",
   "Summer Camp"
 )
 
 public = c(
- "Abandoned Building", 
- "Beach", 
- "Building (Non-Residential)", 
+ "Abandoned Building",
+ "Beach",
+ "Building (Non-Residential)",
  "Catch Basin/Sewer",
  "Ground",
  "Parking Lot/Garage",
- "Public Garden", 
+ "Public Garden",
  "Public Stairs",
- "Street Area", 
- "Vacant Building", 
- "Vacant Lot", 
+ "Street Area",
+ "Vacant Building",
+ "Vacant Lot",
  "Vacant Lot/Property"
 )
 
@@ -363,25 +378,25 @@ rats$Location.Type[rats$Location.Type %in% other] <- "Other"
 rats$Location.Type <- factor(rats$Location.Type)
 rats$Date = as.Date(rats$Created.Date, "%m/%d/%Y")
 
-rats_per_day = rats %>% 
+rats_per_day = rats %>%
   group_by(Date, Location.Type) %>%
-  tally() 
+  tally()
 
 names(rats_per_day) = c("date", "locationtype", "n_rats")
 
 library(tidyverse)
-ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) + 
+ggplot(data=rats_per_day, aes(x=date, y=n_rats, color=locationtype)) +
   geom_line(alpha=0.3) + labs(
-    title="Number of Rats Recorded on Each Day", 
+    title="Number of Rats Recorded on Each Day",
     subtitle="colored by the type of location",
-    x="Date", 
+    x="Date",
     y="Number of Rats Recorded"
-  ) + 
-  scale_color_manual("Location Type", 
-                     values = c("Other" = "yellow", 
-                                "Commercial" = "blue", 
-                                "Private" = "red", 
-                                "Public" = "green")) 
+  ) +
+  scale_color_manual("Location Type",
+                     values = c("Other" = "yellow",
+                                "Commercial" = "blue",
+                                "Private" = "red",
+                                "Public" = "green"))
 
 ```
 
@@ -409,25 +424,25 @@ ggplot(data=rats.time, aes(x=Hour)) +
 
 ```{r}
 rats$Season = time2season(rats$Date, out.fmt = "seasons")
-ggplot(rats, aes(x = Season)) + 
-geom_bar(fill = "cornflowerblue") + 
+ggplot(rats, aes(x = Season)) +
+geom_bar(fill = "cornflowerblue") +
 scale_x_discrete(limits = c("spring", "summer", "autumm", "winter"))
 ```
 ```{r}
 library(ggplot2)
-rats_per_day = rats %>% 
+rats_per_day = rats %>%
   group_by(Date) %>%
-  tally() 
+  tally()
 
 rats_per_day$Season = time2season(rats_per_day$Date, out.fmt = "seasons")
-ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) + 
+ggplot(data=rats_per_day, aes(x=Date, y=n, color = Season)) +
   geom_line(alpha=0.3) + labs(
-    title="Number of Rats Recorded on Each Day", 
+    title="Number of Rats Recorded on Each Day",
     subtitle="colored by the season",
-    x="Date", 
+    x="Date",
     y="Number of Rats Recorded"
   ) +
-stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) + 
+stat_rollapplyr(color = "red", width = 30, align = "left", alpha = 0.5) +
 ggtitle("Width = 30")
 ```
 ```{r}
@@ -444,7 +459,7 @@ Q_covid <- quantile(covid_rats$CASE_COUNT, probs=c(.25, .75), na.rm = FALSE)
 iqr_covid <- IQR(covid_rats$CASE_COUNT)
 Q_rats <- quantile(covid_rats$n, probs=c(.25, .75), na.rm = FALSE)
 iqr_rats <- IQR(covid_rats$n)
-covid_rats.iqr = subset(covid_rats, 
+covid_rats.iqr = subset(covid_rats,
                         CASE_COUNT < Q_covid[2] + 1.5*iqr_covid &
                         CASE_COUNT > Q_covid[1] - 1.5*iqr_covid &
                         n < Q_rats[2] + 1.5*iqr_rats &
@@ -472,13 +487,13 @@ findDist <- function(lon, lat) {
     poly = tib$geometry
     pt = st_point(c(lon, lat))
     res = summary(st_within(pt, poly))
-    
-    
+
+
     if (res[1] == "1") {
       finalres <- dist
-    } 
+    }
   }
-  
+
   return(finalres)
 }
 
@@ -501,6 +516,3 @@ borough.counts
 ggplot(data = borough.counts, aes(x=Borough, y=Count)) +
   geom_col(aes(fill=Borough))
 ```
-
-
-
